@@ -53,4 +53,4 @@ def plot_results(normal, vpn):
     plt.title("VPN vs Normal Performance")
     plt.legend(['Normal', 'VPN'])
 
-    plt.show()
+    return plt
