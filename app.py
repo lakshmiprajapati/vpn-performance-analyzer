@@ -1,45 +1,72 @@
 import streamlit as st
-from analyzer import run_full_test, plot_results
+from analyzer import run_full_test
+import pandas as pd
+import matplotlib.pyplot as plt
 
-# Page config
+# ------------------ PAGE CONFIG ------------------
 st.set_page_config(page_title="VPN Analyzer", layout="wide")
 
-st.title("🚀 VPN Performance Analyzer")
-st.markdown("Compare your internet performance with and without VPN")
+# ------------------ CUSTOM CSS ------------------
+st.markdown("""
+<style>
+body {
+    background-color: #0f172a;
+    color: white;
+}
 
-# Session state
+.big-title {
+    font-size: 42px;
+    font-weight: bold;
+}
+
+.card {
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0px 0px 15px rgba(0,0,0,0.3);
+}
+
+.metric {
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.good { color: #22c55e; }
+.bad { color: #ef4444; }
+
+</style>
+""", unsafe_allow_html=True)
+
+# ------------------ HEADER ------------------
+st.markdown('<div class="big-title">🚀 VPN Performance Analyzer</div>', unsafe_allow_html=True)
+st.write("Compare your internet performance with and without VPN")
+
+# ------------------ SESSION ------------------
 if "normal" not in st.session_state:
     st.session_state.normal = None
-
 if "vpn" not in st.session_state:
     st.session_state.vpn = None
 
-
-# -----------------------------
-# BUTTONS
-# -----------------------------
+# ------------------ BUTTONS ------------------
 col1, col2 = st.columns(2)
 
 with col1:
     if st.button("🟢 Run WITHOUT VPN"):
         st.session_state.normal = run_full_test("WITHOUT VPN")
-        st.success("WITHOUT VPN test completed. Now turn ON VPN.")
+        st.success("Test without VPN completed")
 
 with col2:
     if st.button("🔵 Run WITH VPN"):
         st.session_state.vpn = run_full_test("WITH VPN")
-        st.success("WITH VPN test completed.")
+        st.success("Test with VPN completed")
 
-
-# -----------------------------
-# RESULTS
-# -----------------------------
+# ------------------ RESULTS ------------------
 if st.session_state.normal and st.session_state.vpn:
 
     normal = st.session_state.normal
     vpn = st.session_state.vpn
 
-    st.divider()
+    st.markdown("---")
     st.subheader("📊 Performance Comparison")
 
     col1, col2, col3 = st.columns(3)
@@ -47,102 +74,84 @@ if st.session_state.normal and st.session_state.vpn:
     # LATENCY
     with col1:
         diff = vpn["latency"] - normal["latency"]
-
-        color = "normal"
-        if diff > 0:
-            color = "inverse"  # higher latency = bad
-
-        st.metric(
-            label="📡 Latency (ms)",
-            value=f"{vpn['latency']}",
-            delta=f"{diff:.2f}",
-            delta_color=color
-        )
+        color = "bad" if diff > 0 else "good"
+        st.markdown(f"""
+        <div class="card">
+            <div>📶 Latency (ms)</div>
+            <div class="metric">{vpn["latency"]:.2f}</div>
+            <div class="{color}">{"↑" if diff>0 else "↓"} {abs(diff):.2f}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
     # DOWNLOAD
     with col2:
         diff = vpn["download"] - normal["download"]
-
-        color = "normal"
-        if diff < 0:
-            color = "inverse"  # lower speed = bad
-
-        st.metric(
-            label="⬇ Download (Mbps)",
-            value=f"{vpn['download']}",
-            delta=f"{diff:.2f}",
-            delta_color=color
-        )
+        color = "good" if diff > 0 else "bad"
+        st.markdown(f"""
+        <div class="card">
+            <div>⬇ Download (Mbps)</div>
+            <div class="metric">{vpn["download"]:.2f}</div>
+            <div class="{color}">{"↑" if diff>0 else "↓"} {abs(diff):.2f}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
     # UPLOAD
     with col3:
         diff = vpn["upload"] - normal["upload"]
+        color = "good" if diff > 0 else "bad"
+        st.markdown(f"""
+        <div class="card">
+            <div>⬆ Upload (Mbps)</div>
+            <div class="metric">{vpn["upload"]:.2f}</div>
+            <div class="{color}">{"↑" if diff>0 else "↓"} {abs(diff):.2f}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-        color = "normal"
-        if diff < 0:
-            color = "inverse"
-
-        st.metric(
-            label="⬆ Upload (Mbps)",
-            value=f"{vpn['upload']}",
-            delta=f"{diff:.2f}",
-            delta_color=color
-        )
-
-    # -----------------------------
-    # SMART ANALYSIS
-    # -----------------------------
-    st.divider()
-    st.subheader("🧠 Analysis")
-
-    latency_diff = vpn["latency"] - normal["latency"]
-
-    if latency_diff > 50:
-        st.error("⚠️ VPN significantly increases latency (slower response time)")
-    elif latency_diff > 10:
-        st.warning("⚠️ VPN slightly increases latency")
-    else:
-        st.success("✅ VPN has minimal impact on latency")
-
-    if vpn["download"] < normal["download"]:
-        st.warning("⬇ Download speed decreased with VPN")
-    else:
-        st.success("⬇ Download speed stable")
-
-    if vpn["upload"] < normal["upload"]:
-        st.warning("⬆ Upload speed decreased with VPN")
-    else:
-        st.success("⬆ Upload speed stable")
-
-    # -----------------------------
-    # RAW DATA
-    # -----------------------------
-    st.divider()
-    with st.expander("🔍 View Raw Data"):
-        st.write("WITHOUT VPN", normal)
-        st.write("WITH VPN", vpn)
-
-    # -----------------------------
-    # GRAPH
-    # -----------------------------
-    st.divider()
+    # ------------------ GRAPH ------------------
+    st.markdown("---")
     st.subheader("📈 Visualization")
 
-    fig = plot_results(normal, vpn)
+    data = pd.DataFrame({
+        "Metric": ["Latency", "Download", "Upload"],
+        "Normal": [normal["latency"], normal["download"], normal["upload"]],
+        "VPN": [vpn["latency"], vpn["download"], vpn["upload"]]
+    })
+
+    fig, ax = plt.subplots()
+    data.set_index("Metric").plot(kind="bar", ax=ax)
     st.pyplot(fig)
 
-    # -----------------------------
-    # FINAL CONCLUSION
-    # -----------------------------
-    st.divider()
+    # ------------------ INSIGHTS ------------------
+    st.markdown("---")
+    st.subheader("🧠 Smart Analysis")
+
+    if vpn["latency"] > normal["latency"]:
+        st.warning("⚠️ VPN increases latency (expected due to routing)")
+
+    if vpn["download"] < normal["download"]:
+        st.warning("⚠️ Download speed reduced")
+
+    if vpn["upload"] < normal["upload"]:
+        st.warning("⚠️ Upload speed reduced")
+
+    if vpn["download"] >= normal["download"]:
+        st.success("✅ Download speed stable")
+
+    if vpn["upload"] >= normal["upload"]:
+        st.success("✅ Upload speed stable")
+
+    # ------------------ FINAL CONCLUSION ------------------
+    st.markdown("---")
     st.subheader("📌 Final Conclusion")
 
     st.info("""
-Using a VPN improves privacy and security, but may impact performance.
+Using a VPN improves privacy and security, but may affect speed.
 
-In this test:
-- Latency increased due to encryption and longer routing paths
-- Speed may decrease depending on server and network conditions
-
-This demonstrates the trade-off between **privacy and performance** in real-world networking.
+• Latency usually increases  
+• Speed may decrease depending on server  
+• Trade-off: Privacy vs Performance  
 """)
+
+    # ------------------ RAW DATA ------------------
+    with st.expander("🔍 View Raw Data"):
+        st.json({"WITHOUT VPN": normal, "WITH VPN": vpn})
