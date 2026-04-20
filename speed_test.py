@@ -1,14 +1,23 @@
 import speedtest
 
 def run_speed_test():
-    st = speedtest.Speedtest()
+    try:
+        st = speedtest.Speedtest()
 
-    st.get_best_server()
+        st.get_best_server()
 
-    download_speed = st.download() / 1_000_000  # Convert to Mbps
-    upload_speed = st.upload() / 1_000_000
+        download = st.download() / 1_000_000
+        upload = st.upload() / 1_000_000
 
-    return {
-        "download": round(download_speed, 2),
-        "upload": round(upload_speed, 2)
-    }
+        return {
+            "download": round(download, 2),
+            "upload": round(upload, 2)
+        }
+
+    except Exception as e:
+        print("⚠️ Speed test failed, using fallback...")
+
+        return {
+            "download": 0,
+            "upload": 0
+        }
