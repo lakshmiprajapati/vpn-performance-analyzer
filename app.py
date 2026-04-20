@@ -40,7 +40,7 @@ if st.session_state.normal and st.session_state.vpn:
     vpn = st.session_state.vpn
 
     st.divider()
-    st.subheader("📊 Performance Comparison")
+    st.subheader("Performance Comparison")
 
     col1, col2, col3 = st.columns(3)
 
@@ -93,7 +93,7 @@ if st.session_state.normal and st.session_state.vpn:
     # SMART ANALYSIS
     # -----------------------------
     st.divider()
-    st.subheader("🧠 Analysis")
+    st.subheader("Analysis")
 
     latency_diff = vpn["latency"] - normal["latency"]
 
@@ -118,7 +118,7 @@ if st.session_state.normal and st.session_state.vpn:
     # RAW DATA
     # -----------------------------
     st.divider()
-    with st.expander("🔍 View Raw Data"):
+    with st.expander("View Raw Data"):
         st.write("WITHOUT VPN", normal)
         st.write("WITH VPN", vpn)
 
@@ -126,7 +126,7 @@ if st.session_state.normal and st.session_state.vpn:
     # GRAPH
     # -----------------------------
     st.divider()
-    st.subheader("📈 Visualization")
+    st.subheader("Visualization")
 
     fig = plot_results(normal, vpn)
     st.pyplot(fig)
@@ -135,7 +135,7 @@ if st.session_state.normal and st.session_state.vpn:
     # FINAL CONCLUSION
     # -----------------------------
     st.divider()
-    st.subheader("📌 Final Conclusion")
+    st.subheader("Final Conclusion")
 
     st.info("""
 Using a VPN improves privacy and security, but may impact performance.
