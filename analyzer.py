@@ -1,56 +1,53 @@
 from ping_test import run_ping
 from speed_test import run_speed_test
 import matplotlib.pyplot as plt
-import numpy as np
 
+def run_full_test(mode):
+    print(f"\n🔍 Running test: {mode}")
 
-def run_full_test(label):
-    print(f"\n🔍 Running test: {label}\n")
-
-    ping = run_ping()
-    speed = run_speed_test()
+    ping_result = run_ping()
+    speed_result = run_speed_test()
 
     return {
-        "latency": ping["avg_latency"],
-        "packet_loss": ping["packet_loss"],
-        "download": speed["download"],
-        "upload": speed["upload"]
+        "latency": ping_result["avg_latency"],
+        "packet_loss": ping_result["packet_loss"],
+        "download": speed_result["download"],
+        "upload": speed_result["upload"]
     }
 
 
 def compare_results(normal, vpn):
     print("\n📊 COMPARISON RESULTS\n")
 
-    print(f"Latency Change: {vpn['latency']} ms vs {normal['latency']} ms")
-    print(f"Download Change: {vpn['download']} Mbps vs {normal['download']} Mbps")
-    print(f"Upload Change: {vpn['upload']} Mbps vs {normal['upload']} Mbps")
+    print(f"Latency Change: {vpn['latency']:.2f} ms vs {normal['latency']:.2f} ms")
+    print(f"Download Change: {vpn['download']:.2f} Mbps vs {normal['download']:.2f} Mbps")
+    print(f"Upload Change: {vpn['upload']:.2f} Mbps vs {normal['upload']:.2f} Mbps")
 
 
 def plot_results(normal, vpn):
-    labels = ['Latency (ms)', 'Download (Mbps)', 'Upload (Mbps)']
+    labels = ["Latency (ms)", "Download (Mbps)", "Upload (Mbps)"]
 
     normal_values = [
-        normal['latency'],
-        normal['download'],
-        normal['upload']
+        normal["latency"],
+        normal["download"],
+        normal["upload"]
     ]
 
     vpn_values = [
-        vpn['latency'],
-        vpn['download'],
-        vpn['upload']
+        vpn["latency"],
+        vpn["download"],
+        vpn["upload"]
     ]
 
-    x = np.arange(len(labels))
-    width = 0.35
+    x = range(len(labels))
 
-    plt.figure()
+    plt.figure(figsize=(8, 5))
+    plt.bar(x, normal_values, width=0.4, label="Normal", align="center")
+    plt.bar([i + 0.4 for i in x], vpn_values, width=0.4, label="VPN", align="center")
 
-    plt.bar(x - width/2, normal_values, width)
-    plt.bar(x + width/2, vpn_values, width)
-
-    plt.xticks(x, labels)
+    plt.xticks([i + 0.2 for i in x], labels)
     plt.title("VPN vs Normal Performance")
-    plt.legend(['Normal', 'VPN'])
+    plt.legend()
 
-    return plt
+    plt.tight_layout()
+    plt.show()
