@@ -1,14 +1,13 @@
-from ping_test import run_ping
-from speed_test import run_speed_test
+from analyzer import run_full_test, compare_results
 
-print("🚀 Running Ping Test...\n")
-ping_result = run_ping()
+print("🚀 VPN Performance Analyzer\n")
 
-print(f"📡 Avg Latency: {ping_result['avg_latency']} ms")
-print(f"📉 Packet Loss: {ping_result['packet_loss']} %\n")
+input("👉 Make sure VPN is OFF, then press ENTER...")
 
-print("⚡ Running Speed Test...\n")
-speed_result = run_speed_test()
+normal = run_full_test("WITHOUT VPN")
 
-print(f"⬇ Download Speed: {speed_result['download']} Mbps")
-print(f"⬆ Upload Speed: {speed_result['upload']} Mbps")
+input("\n👉 Now turn ON VPN, then press ENTER...")
+
+vpn = run_full_test("WITH VPN")
+
+compare_results(normal, vpn)
